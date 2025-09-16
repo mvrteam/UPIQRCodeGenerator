@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPI QR Code Generator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --secondary: #4caf50;
+            --accent: #ff6f00;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --background: #ffffff;
+            --text: #333333;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        .dark-mode {
+            --background: #121212;
+            --text: #f8f9fa;
+            --light: #2d2d2d;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            transition: var(--transition);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 60px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .logo svg {
+            margin-right: 10px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Three-dot menu */
+        .menu-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .menu-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 200px;
+            z-index: 100;
+            display: none;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.open {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .dropdown-item svg {
+            margin-right: 10px;
+            color: var(--primary);
+        }
+
+        /* App Container */
+        .app-container {
+            max-width: 100%;
+            padding: 20px;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--light);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        h2 svg {
+            margin-right: 10px;
+        }
+
+        /* Form Elements */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* UPI ID Format Helper */
+        .upi-format {
+            background-color: rgba(46, 125, 50, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary {
+            background-color: var(--gray);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn svg {
+            margin-right: 8px;
+        }
+
+        /* QR Preview */
+        #qr-result-card {
+            display: none;
+        }
+
+        #qr-preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        #qr-preview {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .btn-success {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #3d8b40;
+        }
+
+        .btn-accent {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background-color: #e65100;
+        }
+
+        /* Instructions */
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(46, 125, 50, 0.1);
+            border-radius: 10px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            .app-container {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 4H10V10H4V4Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14 4H20V10H14V4Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 14H10V20H4V14Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14 17C14 17.7956 14.3161 18.5587 14.8787 19.1213C15.4413 19.6839 16.2044 20 17 20C17.7956 20 18.5587 19.6839 19.1213 19.1213C19.6839 18.5587 20 17.7956 20 17C20 16.2044 19.6839 15.4413 19.1213 14.8787C18.5587 14.3161 17.7956 14 17 14C16.2044 14 15.4413 14.3161 14.8787 14.8787C14.3161 15.4413 14 16.2044 14 17Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h1>UPI QR Generator</h1>
+        </div>
+        <p class="tagline">Create payment QR codes for your UPI ID</p>
+        
+        <!-- Three-dot menu button -->
+        <button class="menu-btn" id="menu-btn">⋯</button>
+        
+        <!-- Dropdown menu -->
+        <div class="dropdown-menu" id="dropdown-menu">
+            <div class="dropdown-item" id="theme-toggle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Toggle Theme
+            </div>
+            <div class="dropdown-item" id="save-history">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16L21 8V19C21 20.1046 20.1046 21 19 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M17 21V13H7V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7 3V8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Save History
+            </div>
+            <div class="dropdown-item" id="clear-history">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Clear History
+            </div>
+            <div class="dropdown-item" id="share-app">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 6.65685 16.3431 8 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M6 15C7.65685 15 9 13.6569 9 12C9 10.3431 7.65685 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M18 22C19.6569 22 21 20.6569 21 19C21 17.3431 19.6569 16 18 16C16.3431 16 15 17.3431 15 19C15 20.6569 16.3431 22 18 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8.59 13.51L15.42 17.49" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15.41 6.51L8.59 10.49" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Share App
+            </div>
+        </div>
+    </header>
+
+    <!-- App Container -->
+    <div class="app-container">
+        <div class="card">
+            <h2>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Payment Details
+            </h2>
+            
+            <div class="input-group">
+                <label for="upi-id">Your UPI ID</label>
+                <input type="text" id="upi-id" placeholder="yourname@upi">
+                <div class="error-message" id="upi-error">Please enter a valid UPI ID</div>
+                <div class="upi-format">
+                    UPI ID format: yourname@bankname (e.g., john.doe@ybl or 9876543210@oksbi)
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="name">Your Name (Optional)</label>
+                <input type="text" id="name" placeholder="Enter your name">
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="generate-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 6V12L16 14M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Generate QR
+                </button>
+                <button class="btn btn-secondary" id="reset-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 4H10V10H4V4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14 4H20V10H14V4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M4 14H10V20H4V14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14 17C14 17.7956 14.3161 18.5587 14.8787 19.1213C15.4413 19.6839 16.2044 20 17 20C17.7956 20 18.5587 19.6839 19.1213 19.1213C19.6839 18.5587 20 17.7956 20 17C20 16.2044 19.6839 15.4413 19.1213 14.8787C18.5587 14.3161 17.7956 14 17 14C16.2044 14 15.4413 14.3161 14.8787 14.8787C14.3161 15.4413 14 16.2044 14 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Reset
+                </button>
+            </div>
+        </div>
+
+        <div class="card" id="qr-result-card">
+            <h2>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 4H10V10H4V4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 4H20V10H14V4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 14H10V20H4V14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 17C14 17.7956 14.3161 18.5587 14.8787 19.1213C15.4413 19.6839 16.2044 20 17 20C17.7956 20 18.5587 19.6839 19.1213 19.1213C19.6839 18.5587 20 17.7956 20 17C20 16.2044 19.6839 15.4413 19.1213 14.8787C18.5587 14.3161 17.7956 14 17 14C16.2044 14 15.4413 14.3161 14.8787 14.8787C14.3161 15.4413 14 16.2044 14 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Your Payment QR Code
+            </h2>
+            
+            <div id="qr-preview-container">
+                <div id="qr-preview"></div>
+                
+                <div class="download-options">
+                    <button class="btn btn-success" id="download-png">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Download PNG
+                    </button>
+                    <button class="btn btn-accent" id="share-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 6.65685 16.3431 8 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6 15C7.65685 15 9 13.6569 9 12C9 10.3431 7.65685 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M18 22C19.6569 22 21 20.6569 21 19C21 17.3431 19.6569 16 18 16C16.3431 16 15 17.3431 15 19C15 20.6569 16.3431 22 18 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8.59 13.51L15.42 17.49" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M15.41 6.51L8.59 10.49" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Share QR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card instructions">
+            <h3>How to Use</h3>
+            <ol>
+                <li>Enter your UPI ID (e.g., yourname@ybl)</li>
+                <li>Optionally add your name for identification</li>
+                <li>Click "Generate QR" to create your payment QR code</li>
+                <li>Share the QR code with others</li>
+                <li>When scanned, it will open UPI apps with your payment details</li>
+            </ol>
+        </div>
+    </div>
+
+    <footer>
+        <p>Made With ❤️ by MRV Team</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Variables
+            const upiInput = document.getElementById('upi-id');
+            const nameInput = document.getElementById('name');
+            const upiError = document.getElementById('upi-error');
+            const generateBtn = document.getElementById('generate-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const qrResultCard = document.getElementById('qr-result-card');
+            const qrPreview = document.getElementById('qr-preview');
+            const downloadPng = document.getElementById('download-png');
+            const shareBtn = document.getElementById('share-btn');
+            const menuBtn = document.getElementById('menu-btn');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            const themeToggle = document.getElementById('theme-toggle');
+            const saveHistory = document.getElementById('save-history');
+            const clearHistory = document.getElementById('clear-history');
+            const shareApp = document.getElementById('share-app');
+
+            // Toggle dropdown menu
+            menuBtn.addEventListener('click', function(e) {
+                dropdownMenu.classList.toggle('open');
+                e.stopPropagation();
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                dropdownMenu.classList.remove('open');
+            });
+
+            // Prevent dropdown from closing when clicking inside it
+            dropdownMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+
+            // Theme toggle functionality
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                dropdownMenu.classList.remove('open');
+            });
+
+            // Save history functionality
+            saveHistory.addEventListener('click', function() {
+                alert('History saving feature would be implemented here.');
+                dropdownMenu.classList.remove('open');
+            });
+
+            // Clear history functionality
+            clearHistory.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear your history?')) {
+                    alert('History cleared.');
+                }
+                dropdownMenu.classList.remove('open');
+            });
+
+            // Share app functionality
+            shareApp.addEventListener('click', function() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'UPI QR Generator',
+                        text: 'Check out this UPI QR code generator app!',
+                        url: window.location.href
+                    }).catch(console.error);
+                } else {
+                    alert('Share this app URL: ' + window.location.href);
+                }
+                dropdownMenu.classList.remove('open');
+            });
+
+            // Generate UPI QR code
+            generateBtn.addEventListener('click', function() {
+                const upiId = upiInput.value.trim();
+                const name = nameInput.value.trim();
+                
+                // Validate UPI ID
+                if (!isValidUpiId(upiId)) {
+                    upiError.style.display = 'block';
+                    return;
+                }
+                
+                upiError.style.display = 'none';
+                
+                // Generate UPI payment URL
+                const upiUrl = generateUpiUrl(upiId, name);
+                
+                // Generate QR code
+                generateQRCode(upiUrl);
+                
+                // Show result card
+                qrResultCard.style.display = 'block';
+                
+                // Scroll to results
+                qrResultCard.scrollIntoView({ behavior: 'smooth' });
+            });
+
+            // Reset form
+            resetBtn.addEventListener('click', function() {
+                upiInput.value = '';
+                nameInput.value = '';
+                upiError.style.display = 'none';
+                qrResultCard.style.display = 'none';
+                qrPreview.innerHTML = '';
+            });
+
+            // Download PNG
+            downloadPng.addEventListener('click', function() {
+                const canvas = document.querySelector('#qr-preview canvas');
+                if (canvas) {
+                    const link = document.createElement('a');
+                    link.download = 'upi-qr-code.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }
+            });
+
+            // Share QR code
+            shareBtn.addEventListener('click', function() {
+                const canvas = document.querySelector('#qr-preview canvas');
+                if (canvas) {
+                    canvas.toBlob(function(blob) {
+                        if (navigator.share) {
+                            const file = new File([blob], 'upi-qr-code.png', { type: 'image/png' });
+                            navigator.share({
+                                title: 'My UPI QR Code',
+                                text: 'Scan this QR code to pay me via UPI',
+                                files: [file]
+                            }).catch(console.error);
+                        } else {
+                            alert('Sharing is not supported in your browser. You can download the QR code instead.');
+                        }
+                    });
+                }
+            });
+
+            // Utility functions
+            function isValidUpiId(upiId) {
+                // Basic UPI ID validation
+                const upiRegex = /^[a-zA-Z0-9.\-_]{2,49}@[a-zA-Z]{2,}$/;
+                return upiRegex.test(upiId);
+            }
+
+            function generateUpiUrl(upiId, name) {
+                // Create UPI payment URL
+                let url = `upi://pay?pa=${encodeURIComponent(upiId)}`;
+                
+                if (name) {
+                    url += `&pn=${encodeURIComponent(name)}`;
+                }
+                
+                url += '&cu=INR';
+                
+                return url;
+            }
+
+            function generateQRCode(upiUrl) {
+                // Clear previous QR code
+                qrPreview.innerHTML = '';
+                
+                // Create QR code
+                QRCode.toCanvas(upiUrl, {
+                    width: 280,
+                    height: 280,
+                    color: {
+                        dark: '#000000',
+                        light: '#ffffff'
+                    },
+                    margin: 1
+                }, function(err, canvas) {
+                    if (err) {
+                        qrPreview.innerHTML = '<p>Error generating QR code</p>';
+                        return;
+                    }
+                    
+                    qrPreview.appendChild(canvas);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
